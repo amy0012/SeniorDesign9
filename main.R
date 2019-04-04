@@ -60,7 +60,7 @@ ui <- fluidPage(
                          ),
                        mainPanel(
                          h3("Search Results: "),
-                         div(style='height:800px; width: 570px; overflow-y: scroll', tableOutput('table'))
+                         div(style='height:800px; width: 1800px; overflow-y: scroll', tableOutput('table'))
                        )
               ),
               
