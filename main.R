@@ -11,7 +11,7 @@ library(gmailr)
 library(dplyr)
 
 cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
-cellLine <- cellLine[1:10000,]
+cellLine <- cellLine[1:100000,]
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
 traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
@@ -313,10 +313,11 @@ MergeData <- function(mergeTrait) {
                           'Context', 'MESH.CATEGORY')
   tempdf = traits[traits$Trait == mergeTrait,]
   for (row in 1:nrow(tempdf)) {
-    tempdf2<-data.frame(cellLine[cellLine$start < tempdf$Position[row],])
-    tempdf2<-data.frame(tempdf2[tempdf2$stop > tempdf$Position[row],])
+    tempdf2<-data.frame(cellLine[cellLine$start <= tempdf$Position[row],])
+    tempdf2<-data.frame(tempdf2[tempdf2$stop >= tempdf$Position[row],])
+    tempdf2<-data.frame(tempdf2[paste("chr", tempdf$Chr[row], sep="") == tempdf2$chrom,])
     if (nrow(tempdf2) > 0) {
-      #For some reason, if you remove "+1" it will start omitting entries.
+      #For some reason, if you remove "+1" it will start omitting (overwriting?) entries.
       resultFrame[nrow(resultFrame) + 1,] <- list(as.character(tempdf2$chrom[1]), tempdf2$start[1], tempdf2$stop[1],
                                 as.character(tempdf2$name[1]), as.character(tempdf2$strand[1]), 
                                 tempdf$Position[row], as.character(tempdf$Trait[row]),
