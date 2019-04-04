@@ -10,11 +10,11 @@ library(DT)
 library(gmailr)
 library(dplyr)
 
-cellLine <- wgEncodeRegTfbsClusteredWithCellsV3.bed
+cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
 cellLine <- cellLine[1:10000,]
-names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'score', 'strand')
+names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
-traits <- RESULTS
+traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
 
 traitOptions <- unique(c(as.character(traits$Trait)))
 meshOptions <- unique(c(as.character(traits$MESH.CATEGORY)))
@@ -107,7 +107,6 @@ ui <- fluidPage(
                        textInput("chromStart", "ChromStart", ""),
                        textInput("chromEnd", "ChromEnd", ""),
                        textInput("name", "Name", ""),
-                       textInput("score", "Score", ""),
                        textInput("blocks", "Blocks", ""),
                        #action buttons
                        actionButton("submit", "Submit"),
@@ -127,18 +126,14 @@ server <- function(input, output, session){
   
   #--fetch from trait option selected--#
   datasetInput <- reactive({
-    switch(input$dataset,
-           "Waist Circumference" = cellLine[cellLine$chrom == "chrX",],
-           "Glucose" = cellLine[cellLine$score < 180,],
-           "Forced Expiratory Volume" = cellLine[cellLine$strand == "H1-hESC",],
-           "Intuition" = cellLine[cellLine$score >= 1000,])
+    MergeData(input$dataset)
   })
   
   #--fetch from mesh category option selected--#  
   meshInput <- reactive({
     switch(input$meshData,
            "Nutritional and Metabolic Diseases" = cellLine[cellLine$chrom == "chrX",],
-           "type 2" = cellLine[cellLine$score < 180,],
+           "type 2" = cellLine[cellLine$chromStart > 7000,],
            "type 3" = cellLine[cellLine$strand == "chrY",])
   })
   
@@ -243,7 +238,6 @@ CastData <- function(cellLine) {
                       chromStart = as.integer(cellLine["chromStart"]), 
                       chromEnd = as.integer(cellLine["chromEnd"]),
                       name = cellLine["name"],
-                      score = as.integer(cellLine["score"]),
                       blocks = cellLine["blocks"])
   
   rownames(datar) <- cellLine["id"]
@@ -252,7 +246,7 @@ CastData <- function(cellLine) {
 
 CreateDefaultRecord <- function() {
   mydefault <- CastData(list(id = "0", chrom = "", chromStart = 0, chromEnd = 0,
-                             name = "", score = 0, blocks = ""))
+                             name = "", blocks = ""))
   return (mydefault)
 }
 
@@ -261,7 +255,6 @@ UpdateInputs <- function(cellLine, session) {
   updateTextInput(session, "chrom", value = unname(cellLine["chrom"]))
   updateTextInput(session, "chromStart", value = as.integer(cellLine["chromStart"]))
   updateTextInput(session, "chromEnd", value = as.integer(cellLine["chromEnd"]))
-  updateTextInput(session, "score", value = as.integer(cellLine["score"]))
   updateTextInput(session, "blocks", value = as.integer(cellLine["blocks"]))
 }
 
@@ -307,12 +300,41 @@ GetTableMetadata <- function() {
               chromStart = "chromStart", 
               chromEnd = "chromEnd",
               name = "name",
-              score = "score",
               blocks = "blocks")
   
   result <- list(fields = fields)
   return (result)
 }
+
+MergeData <- function(mergeTrait) {
+  resultFrame = data.frame(matrix(ncol = 13))
+  names(resultFrame) <- c('chrom', 'start', 'stop', 'name', 'strand', 'Position',
+                          'Trait', 'SNP', 'p.value', 'Chr', 'Gene.Region',
+                          'Context', 'MESH.CATEGORY')
+  tempdf = traits[traits$Trait == mergeTrait,]
+  for (row in 1:nrow(tempdf)) {
+    tempdf2<-data.frame(cellLine[cellLine$start < tempdf$Position[row],])
+    tempdf2<-data.frame(tempdf2[tempdf2$stop > tempdf$Position[row],])
+    if (nrow(tempdf2) > 0) {
+      #For some reason, if you remove "+1" it will start omitting entries.
+      resultFrame[nrow(resultFrame) + 1,] <- list(as.character(tempdf2$chrom[1]), tempdf2$start[1], tempdf2$stop[1],
+                                as.character(tempdf2$name[1]), as.character(tempdf2$strand[1]), 
+                                tempdf$Position[row], as.character(tempdf$Trait[row]),
+                                as.character(tempdf$SNP[row]), as.character(tempdf$p.value[row]),
+                                as.character(tempdf$Chr[row]), as.character(tempdf$Gene.Region[row]),
+                                as.character(tempdf$Context[row]), as.character(tempdf$MESH.CATEGORY[row]))
+    }
+  }
+  #Remove the top row of "NA's" if there were hits. The "NA" values are created with the "+1+ above.
+  if (nrow(resultFrame) > 1) {
+    resultFrame <- resultFrame[-c(1),]
+  }
+  return (resultFrame)
+}
+
+#names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
+
+#traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
 
 
 shinyApp(ui = ui, server = server)
