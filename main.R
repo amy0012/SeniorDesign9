@@ -1,16 +1,9 @@
-#
-# This is a Shiny web application. 
-# 3rd Prototype for the Biology Tool Kit
-# 3/31/2019
-#
-
 library(shiny)
-library(shinythemes)
+library(shinydashboard)
 library(DT)
-library(gmailr)
 library(dplyr)
 
-cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
+cellLine <- select(wgEncodeRegTfbsClusteredWithCellsV3, V3, V1, V2, V3, V4, V6)
 cellLine <- cellLine[1:100000,]
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
@@ -19,109 +12,105 @@ traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Conte
 traitOptions <- unique(c(as.character(traits$Trait)))
 meshOptions <- unique(c(as.character(traits$MESH.CATEGORY)))
 
-#------------------------- USER INTERFACE ----------------------------#
 
-ui <- fluidPage(
-  #tags$img(src = "headerwhite.png", height = 250, width = 1500),
-  navbarPage(
-  
-  "Computational Biology Bio-Informatics Toolkit",
-  theme = shinytheme("flatly"),
-  ## yeti, cerulean, cosmo
-  #---page tab settings---#
-  tabsetPanel(type = "tab", position = "right",
-              
-              #SEARCH TAB
-              tabPanel(title = "Search", 
-                       sidebarPanel(
-                         
-                         
+#--------------User Interface------------------#
 
-                         helpText("Welcome to the Biology Bio-Information ToolKit!
-                                  Use the options below to search."),
-                         br(),
-                         
-                         #---user input for search---#
-                         # textInput("option1", "select option1"),
-                         # textInput("option2", "select option2"),
-                         
-                         selectInput("dataset", "Select a trait: ", traitOptions),
-                         selectInput("meshData", "Select a mesh trait category: ", meshOptions),
-                         
-                         helpText("Select your download format."),
-                         radioButtons("type", "Format Type: ", 
-                                      choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")
-                         ),
-                         br(),
-                         
-                         helpText("Click the download button to download your results."),
-                         downloadButton('downloadData', 'Download')
-                         
-                         ),
-                       mainPanel(
-                         h3("Search Results: "),
-                         div(style='height:800px; width: 1800px; overflow-y: scroll', tableOutput('table'))
-                       )
-              ),
-              
-              
-              tabPanel(title = "Submission",
-                       
-                       sidebarPanel(
-                         helpText("Use the text box to write information that may be missing in the database."),
-                         br(),
-                         helpText("Click the 'Submit' button below to submit your entry for review."),
-                         actionButton("submitEntry", "Submit"),
-                         height = "1000px"
-                       ),
-                       mainPanel(
-                         textAreaInput("entryText", "", "Data Summary", width = "500px", height = "300px"),
-                         verbatimTextOutput("value")
-                       )
-                       
-              ),
-              
-              tabPanel(title = "Removal",
-                       sidebarPanel(
-                         helpText("Use the text box to write information that may be missing in the database."),
-                         br(),
-                         helpText("Click the 'Submit' button below to submit your removal request for review."),
-                         actionButton("submitRemoval", "Submit")
-                         
-                       ),
-                       mainPanel(
-                         textAreaInput("removalText", "", "Data Summary", width = "500px", height = "300px")
-                       )
-                       
-              ),
-              
-              tabPanel(title = "ADMIN",
-                       #use shiny js to disable the ID field
-                       shinyjs::useShinyjs(),
-                       #data table
-                       DT::dataTableOutput("responses", width = 300), 
-                       #input fields
-                       tags$hr(),
-                       shinyjs::disabled(textInput("id", "Id", "0")),
-                       textInput("chrom", "Chromosome", ""),
-                       textInput("chromStart", "ChromStart", ""),
-                       textInput("chromEnd", "ChromEnd", ""),
-                       textInput("name", "Name", ""),
-                       textInput("blocks", "Blocks", ""),
-                       #action buttons
-                       actionButton("submit", "Submit"),
-                       actionButton("new", "New"),
-                       actionButton("delete", "Delete")
-              )
-              
-  )          
+header <- dashboardHeader(title = "Bio-Informatics Toolkit")
+
+sidebar <- dashboardSidebar(
   
+    sidebarMenu(
+      menuItem("Search", icon = icon("search"), tabName = "Search"),
+      menuItem("Removal Request", icon = icon("minus-circle"), tabName = "Removal"),
+      menuItem("Submission Request", icon = icon("plus-circle"), tabName = "Submission"),
+      menuItem("Admin", icon = icon("lock"), tabName = "Admin")
+    
+      )
+  )
   
-)
+
+body <- dashboardBody(
+  tags$img(src = "headerwhite.png", height = 250, width = 1220),
+  fluidRow(
+  tabItems(
+    tabItem(tabName = "Search",
+            box(title = "Search Results", width = 8, status = "primary", solidHeader = TRUE, 
+                div(style='height:777px; width: 777px; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
+                ),
+            
+            box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
+                  
+                  tabPanel(collapsible = TRUE,
+                  helpText("Welcome to the Biology Bio-Information ToolKit! Use the options below to search."),
+
+                  selectInput("dataset", "Select a trait: ", traitOptions),
+                  selectInput("meshData", "Select a mesh trait category: ", meshOptions),
+                  
+                  helpText("Select your download format."),
+                  radioButtons("type", "Format Type: ", choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")),
+                  helpText("Click the download button to download your results."),
+                  downloadButton('downloadData', 'Download')
+                  )
+            )
+    ),
+    
+    tabItem(tabName = "Removal",
+            box(width = 3,
+                helpText("Use the text box to write information that may need to be removed from the database."), 
+                status = "primary",
+                helpText("Click the 'submit button' below to submit your entry for review."),
+                actionButton("submitRemoval", "Submit")
+            ),
+            box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
+              textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
+            )
+    ),
+    
+    tabItem(tabName = "Submission",
+            box(width = 3,
+                helpText("Use the text box to write information that may need to be added to the database."), 
+                status = "primary",
+                helpText("Click the 'submit button' below to submit your entry for review."),
+                actionButton("submitEntry", "Submit")
+            ),
+            box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
+                textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
+            )
+    ),
+    tabItem(tabName = "Admin",
+        box(title = "ADMIN",
+            status = "primary",
+            solidHeader = TRUE,
+            #use shiny js to disable the ID field
+            shinyjs::useShinyjs(),
+            #data table
+            DT::dataTableOutput("responses", width = 300), 
+            #input fields
+            tags$hr(),
+            shinyjs::disabled(textInput("id", "Id", "0")),
+            textInput("chrom", "Chromosome", ""),
+            textInput("chromStart", "ChromStart", ""),
+            textInput("chromEnd", "ChromEnd", ""),
+            textInput("name", "Name", ""),
+            textInput("blocks", "Blocks", ""),
+            #action buttons
+            actionButton("submit", "Submit"),
+            actionButton("new", "New"),
+            actionButton("delete", "Delete"))
+    )
+  )
+  
+  ) 
 )
 
 
+ui <- dashboardPage(
+  skin = "blue",
+  header, sidebar, body)
 
+
+
+#------------------server--------------------#
 server <- function(input, output, session){
   
   #--fetch from trait option selected--#
@@ -151,32 +140,11 @@ server <- function(input, output, session){
            "Text(Space Separated)" = "txt", 
            "Doc" = "doc"
     )
-  })
-  
-  output$value <-renderText({input$caption})
-  
-  emails <- eventReactive(input$submitEntry
-                          , {
-                            test_email <- mime() %>%
-                              to(c("ansleigh.yancey@gmail.com")) %>%
-                              html_body(input$entryText) %>%
-                              subject("subject")
-                            # attach_file("file.txt")
-                            
-                            test_email <- sub("Content-Disposition: inline\r\n--","Content-Disposition: inline\r\n\r\n--", as.character(test_email))
-                            
-                            ret_val <- send_message(test_email)
-                          })                  
-
-  
-  randomVals <- eventReactive(input$submitRemoval, {
-    runif(input$removalText)
+    
   })
   
   
-  
-  #____________ADMIN_____________#
-  
+  #--------------ADMIN Server-------------# 
   
   # input fields are treated as a group
   formData <- reactive({
@@ -319,11 +287,11 @@ MergeData <- function(mergeTrait) {
     if (nrow(tempdf2) > 0) {
       #For some reason, if you remove "+1" it will start omitting (overwriting?) entries.
       resultFrame[nrow(resultFrame) + 1,] <- list(as.character(tempdf2$chrom[1]), tempdf2$start[1], tempdf2$stop[1],
-                                as.character(tempdf2$name[1]), as.character(tempdf2$strand[1]), 
-                                tempdf$Position[row], as.character(tempdf$Trait[row]),
-                                as.character(tempdf$SNP[row]), as.character(tempdf$p.value[row]),
-                                as.character(tempdf$Chr[row]), as.character(tempdf$Gene.Region[row]),
-                                as.character(tempdf$Context[row]), as.character(tempdf$MESH.CATEGORY[row]))
+                                                  as.character(tempdf2$name[1]), as.character(tempdf2$strand[1]), 
+                                                  tempdf$Position[row], as.character(tempdf$Trait[row]),
+                                                  as.character(tempdf$SNP[row]), as.character(tempdf$p.value[row]),
+                                                  as.character(tempdf$Chr[row]), as.character(tempdf$Gene.Region[row]),
+                                                  as.character(tempdf$Context[row]), as.character(tempdf$MESH.CATEGORY[row]))
     }
   }
   #Remove the top row of "NA's" if there were hits. The "NA" values are created with the "+1+ above.
@@ -338,6 +306,5 @@ MergeData <- function(mergeTrait) {
 #traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
 
 
-shinyApp(ui = ui, server = server)
 
-
+shinyApp(ui, server)
