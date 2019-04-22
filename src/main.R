@@ -33,7 +33,7 @@ library(dplyr)
 
 # "wgEncodeRegTfbsClusteredWithCellsV3" is the name of the file (of type .bed as its extension) that the
 # client provided to us to use. It contains information about human genome cell signals and markers.
-cellLine <- select(wgEncodeRegTfbsClusteredWithCellsV3, V3, V1, V2, V3, V4, V6)
+cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
 
 # As of the time that this comment was written, the search has been restricted to 100,000 entries because
 # the current algorithm is slower than desired. This comment can be removed when a solution, whether it be
