@@ -302,9 +302,9 @@ MergeData <- function(mergeTrait) {
                           'Context', 'MESH.CATEGORY')
   tempdf = traits[traits$Trait == mergeTrait,]
   for (row in 1:nrow(tempdf)) {
-    tempdf2<-data.frame(cellLine[cellLine$start <= tempdf$Position[row],])
-    tempdf2<-data.frame(tempdf2[tempdf2$stop >= tempdf$Position[row],])
-    tempdf2<-data.frame(tempdf2[paste("chr", tempdf$Chr[row], sep="") == tempdf2$chrom,])
+    tempdf2<-cellLine[cellLine$start <= tempdf$Position[row],]
+    tempdf2<-tempdf2[tempdf2$stop >= tempdf$Position[row],]
+    tempdf2<-tempdf2[paste("chr", tempdf$Chr[row], sep="") == tempdf2$chrom,]
     if (nrow(tempdf2) > 0) {
       #For some reason, if you remove "+1" it will start omitting (overwriting?) entries.
       resultFrame[nrow(resultFrame) + 1,] <- list(as.character(tempdf2$chrom[1]), tempdf2$start[1], tempdf2$stop[1],
