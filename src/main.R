@@ -73,13 +73,13 @@ body <- dashboardBody(
               box(title = "Add to the Database", width = 8, solidHeader = TRUE, status = "primary",
                   
                 
-                  "To add information to the database, submit an Excel file from your computer.", 
+                  "To compare your trait dataset to the exiting database sububmit an Excel file from your computer.", 
                   
                   br(),
                   
                   
                   "Your Excel file must follow the below format for your submission to be successful. Make sure to remove all column names from your submission.",
-                  img(src = "uploadExample.PNG", height = 70, width = 1000),
+                  img(src = "uploadExampleFinal.PNG", height = 70, width = 700),
 
                   " ",
                   br(),
