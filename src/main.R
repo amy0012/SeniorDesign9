@@ -3,13 +3,19 @@ library(shinydashboard)
 library(DT)
 library(dplyr)
 
-
+# cellLine <- select(read.table("../data/wgEncodeRegTfbsClusteredwithCellsV3.bed",
+#                              header = FALSE,
+#                              sep = "\t"),
+#                   V1, V2, V3, V4, V6)
 cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
-cellLine <- cellLine[1:100000,]
+cellLine <- cellLine[4000000:4300000,]
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
-
-traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+traits <- select(read.csv("../data/RESULTS.TAB",
+                          header = TRUE,
+                          sep = "\t"), 
+                 Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+# traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
 
 traitOptions <- unique(c(as.character(traits$Trait)))
 meshOptions <- unique(c(as.character(traits$MESH.CATEGORY)))
@@ -70,10 +76,10 @@ body <- dashboardBody(
       # ),
       
       tabItem(tabName = "Submission",
-              box(title = "Add to the Database", width = 8, solidHeader = TRUE, status = "primary",
+              box(title = "Use Your Own Data", width = 8, solidHeader = TRUE, status = "primary",
                   
                 
-                  "To compare your trait dataset to the exiting database sububmit an Excel file from your computer.", 
+                  "To compare your trait dataset to the existing database, please upload a .csv file.", 
                   
                   br(),
                   
@@ -83,11 +89,17 @@ body <- dashboardBody(
 
                   " ",
                   br(),
-                  helpText("Click the Upload button to select your file."),
-                  actionButton("uploadFile", "Upload"),
+                  fileInput("file1", "Choose CSV File",
+                            multiple = TRUE,
+                            accept = c("text/csv",
+                                       "text/comma-separated-values,text/plain",
+                                       ".csv")),
                   
+                  # Horizontal line ----
+                  tags$hr(),
+
                   helpText("Click the Submit button below to add your information."),
-                  actionButton("submitFile", "Submit")
+                  actionButton("submitButton", "Submit")
               )
               
              # box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
@@ -134,6 +146,8 @@ ui <- dashboardPage(
 #------------------server--------------------#
 server <- function(input, output, session){
   
+  options(shiny.maxRequestSize=30*1024^2)
+  
   #--fetch from trait option selected--#
   datasetInput <- reactive({
     MergeData(input$dataset)
@@ -162,6 +176,20 @@ server <- function(input, output, session){
            "Doc" = "doc"
     )
     
+  })
+  
+  observeEvent(input$submitButton, {
+    
+    req(input$file1)
+    
+    previousTraits <- data.frame(traits)
+    traits <<- select(read.csv(input$file1$datapath,
+                   header = TRUE,
+                   sep = "\t"), 
+                   Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+    
+    traitOptions <<- unique(c(as.character(traits$Trait)))
+    meshOptions <<- unique(c(as.character(traits$MESH.CATEGORY)))
   })
   
   
@@ -300,7 +328,7 @@ MergeData <- function(mergeTrait) {
   names(resultFrame) <- c('chrom', 'start', 'stop', 'name', 'strand', 'Position',
                           'Trait', 'SNP', 'p.value', 'Chr', 'Gene.Region',
                           'Context', 'MESH.CATEGORY')
-  tempdf = traits[traits$Trait == mergeTrait,]
+  tempdf <- traits[traits$Trait == mergeTrait,]
   for (row in 1:nrow(tempdf)) {
     tempdf2<-cellLine[cellLine$start <= tempdf$Position[row],]
     tempdf2<-tempdf2[tempdf2$stop >= tempdf$Position[row],]
