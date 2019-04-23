@@ -4,7 +4,7 @@ library(DT)
 library(dplyr)
 
 
-cellLine <- select(wgEncodeRegTfbsClusteredWithCellsV3, V1, V2, V3, V4, V6)
+cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
 cellLine <- cellLine[1:100000,]
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
@@ -21,87 +21,106 @@ header <- dashboardHeader(title = "Bio-Informatics Toolkit")
 
 sidebar <- dashboardSidebar(
   
-    sidebarMenu(
-      menuItem("Search", icon = icon("search"), tabName = "Search"),
-      menuItem("Removal Request", icon = icon("minus-circle"), tabName = "Removal"),
-      menuItem("Submission Request", icon = icon("plus-circle"), tabName = "Submission"),
-      menuItem("Admin", icon = icon("lock"), tabName = "Admin")
+  sidebarMenu(
+    menuItem("Search", icon = icon("search"), tabName = "Search"),
+  # menuItem("Removal Request", icon = icon("minus-circle"), tabName = "Removal"),
+    menuItem("Submission", icon = icon("plus-circle"), tabName = "Submission")
+  # ,
+  # menuItem("Admin", icon = icon("lock"), tabName = "Admin")
     
-      )
   )
-  
+)
+
 
 body <- dashboardBody(
   tags$img(src = "headerwhite.png", height = 150, width = 1220),
   fluidRow(
-  tabItems(
-    tabItem(tabName = "Search",
-            box(title = "Search Results", width = 8, status = "primary", solidHeader = TRUE, 
-                div(style='height:777px; width: 777px; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
-                ),
-            
-            box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
+    tabItems(
+      tabItem(tabName = "Search",
+              box(title = "Search Results", width = 7, status = "primary", solidHeader = TRUE, 
+                  div(style='height:777px; width: 777px; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
+              ),
+              
+              box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
                   
                   tabPanel(collapsible = TRUE,
-                  helpText("Welcome to the Biology Bio-Information ToolKit! Use the options below to search."),
-
-                  selectInput("dataset", "Select a trait: ", traitOptions),
-                  selectInput("meshData", "Select a mesh trait category: ", meshOptions),
-                  
-                  helpText("Select your download format."),
-                  radioButtons("type", "Format Type: ", choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")),
-                  helpText("Click the download button to download your results."),
-                  downloadButton('downloadData', 'Download')
+                           helpText("Welcome to the Biology Bio-Information ToolKit! Use the options below to search."),
+                           
+                           selectInput("dataset", "Select a trait: ", traitOptions),
+                          # selectInput("meshData", "Select a mesh trait category: ", meshOptions),
+                           
+                           helpText("Select your download format."),
+                           radioButtons("type", "Format Type: ", choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")),
+                           helpText("Click the download button to download your results."),
+                           downloadButton('downloadData', 'Download')
                   )
-            )
-    ),
-    
-    tabItem(tabName = "Removal",
-            box(width = 3,
-                helpText("Use the text box to write information that may need to be removed from the database."), 
-                status = "primary",
-                helpText("Click the 'submit button' below to submit your entry for review."),
-                actionButton("submitRemoval", "Submit")
-            ),
-            box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
-              textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
-            )
-    ),
-    
-    tabItem(tabName = "Submission",
-            box(width = 3,
-                helpText("Use the text box to write information that may need to be added to the database."), 
-                status = "primary",
-                helpText("Click the 'submit button' below to submit your entry for review."),
-                actionButton("submitEntry", "Submit")
-            ),
-            box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
-                textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
-            )
-    ),
-    tabItem(tabName = "Admin",
-        box(title = "ADMIN",
-            status = "primary",
-            solidHeader = TRUE,
-            #use shiny js to disable the ID field
-            shinyjs::useShinyjs(),
-            #data table
-            DT::dataTableOutput("responses", width = 300), 
-            #input fields
-            tags$hr(),
-            shinyjs::disabled(textInput("id", "Id", "0")),
-            textInput("chrom", "Chromosome", ""),
-            textInput("chromStart", "ChromStart", ""),
-            textInput("chromEnd", "ChromEnd", ""),
-            textInput("name", "Name", ""),
-            textInput("blocks", "Blocks", ""),
-            #action buttons
-            actionButton("submit", "Submit"),
-            actionButton("new", "New"),
-            actionButton("delete", "Delete"))
+              )
+      ),
+      
+      # tabItem(tabName = "Removal",
+      #         box(width = 3,
+      #             helpText("Use the text box to write information that may need to be removed from the database."), 
+      #             status = "primary",
+      #             helpText("Click the 'submit button' below to submit your entry for review."),
+      #             actionButton("submitRemoval", "Submit")
+      #         ),
+      #         box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
+      #             textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
+      #         )
+      # ),
+      
+      tabItem(tabName = "Submission",
+              box(title = "Add to the Database", width = 8, solidHeader = TRUE, status = "primary",
+                  
+                
+                  "To add information to the database, submit an Excel file from your computer.", 
+                  
+                  br(),
+                  
+                  
+                  "Your Excel file must follow the below format for your submission to be successful. Make sure to remove all column names from your submission.",
+                  img(src = "uploadExample.PNG", height = 70, width = 1000),
+
+                  " ",
+                  br(),
+                  helpText("Click the Upload button to select your file."),
+                  actionButton("uploadFile", "Upload"),
+                  
+                  helpText("Click the Submit button below to add your information."),
+                  actionButton("submitFile", "Submit")
+              )
+              
+             # box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
+             #     textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
+             #)
+      )
+      
+      
+      
+      # ,
+      # tabItem(tabName = "Admin",
+      #         box(title = "ADMIN",
+      #             status = "primary",
+      #             solidHeader = TRUE,
+      #             #use shiny js to disable the ID field
+      #             shinyjs::useShinyjs(),
+      #             #data table
+      #             DT::dataTableOutput("responses", width = 300), 
+      #             #input fields
+      #             tags$hr(),
+      #             shinyjs::disabled(textInput("id", "Id", "0")),
+      #             textInput("chrom", "Chromosome", ""),
+      #             textInput("chromStart", "ChromStart", ""),
+      #             textInput("chromEnd", "ChromEnd", ""),
+      #             textInput("name", "Name", ""),
+      #             textInput("blocks", "Blocks", ""),
+      #             #action buttons
+      #             actionButton("submit", "Submit"),
+      #             actionButton("new", "New"),
+      #             actionButton("delete", "Delete"))
+      # )
     )
-  )
-  
+    
   ) 
 )
 
