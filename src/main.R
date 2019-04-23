@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(DT)
 library(dplyr)
+library(shinyalert)
 
 # cellLine <- select(read.table("../data/wgEncodeRegTfbsClusteredwithCellsV3.bed",
 #                              header = FALSE,
@@ -39,12 +40,12 @@ sidebar <- dashboardSidebar(
 
 
 body <- dashboardBody(
-  tags$img(src = "headerwhite.png", height = 150, width = 1220),
+  tags$img(src = "headerwhite.png", height = 150, width = "100%"),
   fluidRow(
     tabItems(
       tabItem(tabName = "Search",
-              box(title = "Search Results", width = 7, status = "primary", solidHeader = TRUE, 
-                  div(style='height:777px; width: 777px; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
+              box(title = "Search Results", width = 8, status = "primary", solidHeader = TRUE, 
+                  div(style='height:777px; width: "100%"; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
               ),
               
               box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
@@ -76,7 +77,7 @@ body <- dashboardBody(
       # ),
       
       tabItem(tabName = "Submission",
-              box(title = "Use Your Own Data", width = 8, solidHeader = TRUE, status = "primary",
+              box(title = "Use Your Own Data", width = 12, solidHeader = TRUE, status = "primary",
                   
                 
                   "To compare your trait dataset to the existing database, please upload a .csv file.", 
@@ -139,7 +140,8 @@ body <- dashboardBody(
 
 ui <- dashboardPage(
   skin = "blue",
-  header, sidebar, body)
+  header, sidebar, body,
+  useShinyalert())
 
 
 
@@ -182,7 +184,7 @@ server <- function(input, output, session){
     
     req(input$file1)
     
-    previousTraits <- data.frame(traits)
+    
     traits <<- select(read.csv(input$file1$datapath,
                    header = TRUE,
                    sep = "\t"), 
@@ -190,6 +192,8 @@ server <- function(input, output, session){
     
     traitOptions <<- unique(c(as.character(traits$Trait)))
     meshOptions <<- unique(c(as.character(traits$MESH.CATEGORY)))
+    
+    shinyalert("File Upload Successful")
   })
   
   
