@@ -101,26 +101,30 @@ sidebar <- dashboardSidebar(
 # Much of this logic was implemented from the normal Shiny tutorial found at:
 # https://rstudio.github.io/shinydashboard/structure.html#body
 body <- dashboardBody(
-  tags$img(src = "headerwhite.png", height = 150, width = "100%"),
+  tags$img(src = "toolkitBanner.png", height = 250, width = "100%"),
   fluidRow(
     tabItems(
       tabItem(tabName = "Search",
               box(title = "Search Results", width = 8, status = "primary", solidHeader = TRUE, 
                   div(style='height:777px; width: "100%"; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
               ),
+              
               box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
-                  tabPanel(collapsible = TRUE,
-                           helpText("Welcome to the Biology Bio-Information ToolKit! Use the options below to search."),
-                           selectInput("dataset", "Select a trait: ", traitOptions),
-                           
-                           # Removed:
-                           # selectInput("meshData", "Select a mesh trait category: ", meshOptions),
-                           
-                           helpText("Select your download format."),
-                           radioButtons("type", "Format Type: ", choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")),
-                           helpText("Click the download button to download your results."),
-                           downloadButton('downloadData', 'Download')
-                  )
+                  h4("Welcome to the Biology Bio-Information ToolKit!"), 
+                  h4("Use the options below to search."),
+                  tags$hr(),
+                  selectInput("dataset", "Select a trait: ", traitOptions)
+              ),
+              
+              box(title = "Download Your Search Results", width = 4, status = "primary", solidHeader = TRUE,
+                  
+                  h4("To download your search results, select a file type below and click the 'Download' button."),
+                  tags$hr(),
+                  radioButtons("filetype", "File Type:",
+                               choices = c("CSV", "TSV", "TAB")),
+                  tags$hr(),
+                  
+                  downloadButton("downloadData", "Download")
               )
       ),
       
@@ -140,40 +144,31 @@ body <- dashboardBody(
       
       tabItem(tabName = "Submission",
               box(title = "Use Your Own Data", width = 12, solidHeader = TRUE, status = "primary",
-                  "To compare your own trait dataset to the existing database, please upload a tab-delimited file.",
-                  br(),
                   
-                  "Acceptable file types: .txt, .csv, .tab", 
-                  br(),
                   
-                  "Max file size: 30MB",
-                  br(),
-                  
-                  "Your file must contain, at a minimum, the following eight headers for your submission to be successful. Please ensure all eight headers are labeled exactly as shown below:",
-                  br(),
-                  br(),
-                  
-                  img(src = "uploadExampleFinal.PNG", height = 70, width = 600),
-                  " ",
-                  br(),
-                  
+                  h4("To compare your own trait dataset to the existing database, please upload a tab-delimited file."),
                   tags$hr(),
+                  h4("Acceptable file types: .txt, .csv, .tab"), 
+                  h4("Max file size: 30MB"),
+                  tags$hr(),
+                  h4("Your file must contain, at a minimum, the following eight headers for your submission to be successful."),
+                  tags$hr(),
+                  h4("Please ensure all eight headers are labeled exactly as shown below:"),
+                  img(src = "uploadExampleFinal.PNG", height = 80, width = 800),
+                  br()
+              ),
+              
+              box(title = 'File Upload', width = 12, solidHeader = TRUE, status = "primary",
                   fileInput("file1", "Choose .TXT, .CSV, or .TAB File",
                             multiple = FALSE,
                             accept = c("text/csv",
                                        "text/comma-separated-values,text/plain",
                                        ".csv")),
                   
-                  # Note: Horizontal line ----
-                  tags$hr(),
-                  helpText("Click the Submit button below to add your information."),
+                  h4("Click the Submit button below to add your information."),
                   actionButton("submitButton", "Submit")
               )
               
-              # Removed: 
-              # box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
-              #     textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
-              #)
       )
       
       
@@ -207,16 +202,22 @@ body <- dashboardBody(
   ) 
 )
 
+
+
+ui <- dashboardPage(
+  skin = "blue",
+  header, sidebar, body,
+  useShinyalert())
+
+
+
 #------------------ Server --------------------#	
 # Several aspects here for our web application may or may not be used, depending on	
 # how we implement the uploading of another RESULTS file. Currently, when downloading	
 # from https://www.ncbi.nlm.nih.gov/projects/gapplus/sgap_plus.htm, only a .TAB file	
 # extension is attached with the file. Things like Excel sheets, CSV, etc. may be	
 # unnecessary to try and implement.
-ui <- dashboardPage(
-  skin = "blue",
-  header, sidebar, body,
-  useShinyalert())
+
 
 server <- function(input, output, session){
   options(shiny.maxRequestSize=30*1024^2)
@@ -246,15 +247,28 @@ server <- function(input, output, session){
   
   
   # Note: Fetch from options for download
-  fileext <- reactive({
-    switch(input$type,
-           "Excel (CSV)" = "csv", 
-           "Text(TSV)" = "txt", 
-           "Text(Space Separated)" = "txt", 
-           "Doc" = "doc"
-    )
-  })
-
+  output$downloadData <- downloadHandler(
+    
+    # This function returns a string which tells the client
+    # browser what name to use when saving the file.
+    filename = function() {
+      paste(input$dataset, input$filetype, sep = ".")
+    },
+    
+    # This function should write data to a file given to it by
+    # the argument 'file'.
+    content = function(file) {
+      sep <- switch(input$filetype, "CSV" = ",", "TSV" = "\t")
+      
+      # Write to a file specified by the 'file' argument
+      write.table(datasetInput(), file, sep = sep,
+                  row.names = FALSE)
+      
+      shinyalert("File Download successful")
+    }
+    
+  )
+  
   # Note: This block of code handles error conditions that may be met during
   # the uploading of different RESULTS.TAB-esque datasets. It uses standard
   # try - catch error handling.
