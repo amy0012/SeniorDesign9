@@ -9,7 +9,7 @@ library(shinyalert)
 #                              sep = "\t"),
 #                   V1, V2, V3, V4, V6)
 cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
-cellLine <- cellLine[4000000:4300000,]
+# cellLine <- cellLine[4000000:4300000,]
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
 traits <- select(read.csv("../data/RESULTS.TAB",
@@ -94,7 +94,7 @@ body <- dashboardBody(
                   " ",
                   br(),
                   tags$hr(),
-                  fileInput("file1", "Choose CSV File",
+                  fileInput("file1", "Choose .TXT, .CSV, or .TAB File",
                             multiple = FALSE,
                             accept = c("text/csv",
                                        "text/comma-separated-values,text/plain",
@@ -189,15 +189,20 @@ server <- function(input, output, session){
     req(input$file1)
     
     
-    traits <<- select(read.csv(input$file1$datapath,
+    tryCatch({
+      traits <<- select(read.csv(input$file1$datapath,
                    header = TRUE,
                    sep = "\t"), 
                    Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+      traitOptions <<- unique(c(as.character(traits$Trait)))
+      meshOptions <<- unique(c(as.character(traits$MESH.CATEGORY)))
+      shinyalert("File upload successful")
+    },
+      error=function(cond) {
+        shinyalert("File upload failed; please check file format")
+    })
     
-    traitOptions <<- unique(c(as.character(traits$Trait)))
-    meshOptions <<- unique(c(as.character(traits$MESH.CATEGORY)))
-    
-    shinyalert("File Upload Successful")
+
   })
   
   
