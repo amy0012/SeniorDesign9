@@ -80,18 +80,22 @@ body <- dashboardBody(
               box(title = "Use Your Own Data", width = 12, solidHeader = TRUE, status = "primary",
                   
                 
-                  "To compare your trait dataset to the existing database, please upload a .csv file.", 
-                  
+                  "To compare your own trait dataset to the existing database, please upload a tab-delimited file.",
                   br(),
-                  
-                  
-                  "Your Excel file must follow the below format for your submission to be successful. Make sure to remove all column names from your submission.",
-                  img(src = "uploadExampleFinal.PNG", height = 70, width = 700),
+                  "Acceptable file types: .txt, .csv, .tab", 
+                  br(),
+                  "Max file size: 30MB",
+                  br(),
+                  "Your file must contain, at a minimum, the following eight headers for your submission to be successful. Please ensure all eight headers are labeled exactly as shown below:",
+                  br(),
+                  br(),
+                  img(src = "uploadExampleFinal.PNG", height = 70, width = 600),
 
                   " ",
                   br(),
+                  tags$hr(),
                   fileInput("file1", "Choose CSV File",
-                            multiple = TRUE,
+                            multiple = FALSE,
                             accept = c("text/csv",
                                        "text/comma-separated-values,text/plain",
                                        ".csv")),
