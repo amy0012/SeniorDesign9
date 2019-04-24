@@ -1,44 +1,105 @@
+#-----------------------------------------------#	
+#-------------- Auburn University --------------#	
+#---------- COMP 4710: Senior Design -----------#	
+#----------- Professor: Dr. Xiao Qin -----------#	
+#------------------- Group 9 -------------------#	
+#----------- Spring Semester | 2019 ------------#	
+#-------- Online Bioinformatics Toolkit --------#	
+#------------- Sponsor: Dr. Li Chen ------------#	
+#-----------------------------------------------#
+
+# Project Location: https://github.com/amy0012/SeniorDesign9	
+# Tools Used: RStudio, Github, Shinyapps.io	
+# Languages Used: R	
+
+# Authors / Group Members:	
+#     Benjamin Williams     bmw0059@auburn.edu	
+#     Paul Ryu              phc0004@auburn.edu	
+#     Sadaira Packer        smp0043@auburn.edu	
+#     Ansleigh Yancey       amy0012@auburn.edu	
+#     Mason Monday          mam0148@auburn.edu
+
+# DOCUMENTATION STYLE:
+# The file is documented with "Note: " and "Removed: ".
+# "Note: " is normal documentation, provided to assist future in future development efforts.
+# "Removed: " are line(s) of code that were not included in the final product but were kept
+# in case the logic is needed in future development.
+
+
+#------------------ Libraries ------------------#	
+# Shiny: Open source R package that provides a web framework for building web applications using R.	
+# Shiny Dashboard: Allows creations of headers, sidebar, and body for the web application.	
+# DT: Provides an R interface to the JavaScript library DataTables. R data objects (matrices or data	
+#     frames) can be displayed as tables on HTML pages, and DataTables provides filtering, pagination,	
+#     sorting, and many other features in the tables.	
+# DPlyr: Data manipulation grammar package
 library(shiny)
 library(shinydashboard)
 library(DT)
 library(dplyr)
 library(shinyalert)
 
+
+# Removed:
 # cellLine <- select(read.table("../data/wgEncodeRegTfbsClusteredwithCellsV3.bed",
 #                              header = FALSE,
 #                              sep = "\t"),
 #                   V1, V2, V3, V4, V6)
+
+
+# Note: "wgEncodeRegTfbsClusteredWithCellsV3" is the name of the file (of type .bed as its extension) that the	
+#        client provided to us to use. It contains information about human genome cell signals and markers.
 cellLine <- select(wgEncodeRegTfbsClusteredwithCellsV3, V1, V2, V3, V4, V6)
+
+
+# Removed:
 # cellLine <- cellLine[4000000:4300000,]
+
+
+# Note: These are the column titles.
 names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
 
+
+# Note: Necessary information needed by the client when intersecting datasets is taken.
 traits <- select(read.csv("../data/RESULTS.TAB",
                           header = TRUE,
                           sep = "\t"), 
                  Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+
+
+# Removed: 
 # traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+
 
 traitOptions <- unique(c(as.character(traits$Trait)))
 meshOptions <- unique(c(as.character(traits$MESH.CATEGORY)))
 
 
-#--------------User Interface------------------#
+#--------------- User Interface ----------------#
 
+# Note: Header (Required with Shiny UI)
 header <- dashboardHeader(title = "Bio-Informatics Toolkit")
 
+
+# Note: Sidebar (Required with Shiny UI)
 sidebar <- dashboardSidebar(
-  
   sidebarMenu(
     menuItem("Search", icon = icon("search"), tabName = "Search"),
-  # menuItem("Removal Request", icon = icon("minus-circle"), tabName = "Removal"),
-    menuItem("Submission", icon = icon("plus-circle"), tabName = "Submission")
-  # ,
-  # menuItem("Admin", icon = icon("lock"), tabName = "Admin")
     
+    # Removed: 
+    # menuItem("Removal Request", icon = icon("minus-circle"), tabName = "Removal"),
+    
+    menuItem("Submission", icon = icon("plus-circle"), tabName = "Submission")
+    
+    # Removed: 
+    # ,
+    # menuItem("Admin", icon = icon("lock"), tabName = "Admin")
   )
 )
 
-
+# Note: Body (Required with Shiny UI)
+# Much of this logic was implemented from the normal Shiny tutorial found at:
+# https://rstudio.github.io/shinydashboard/structure.html#body
 body <- dashboardBody(
   tags$img(src = "headerwhite.png", height = 150, width = "100%"),
   fluidRow(
@@ -47,14 +108,13 @@ body <- dashboardBody(
               box(title = "Search Results", width = 8, status = "primary", solidHeader = TRUE, 
                   div(style='height:777px; width: "100%"; overflow-y: scroll; overflow-x: scroll', tableOutput('table'))
               ),
-              
               box(title = "Search Options", width = 4, status = "primary", solidHeader = TRUE,
-                  
                   tabPanel(collapsible = TRUE,
                            helpText("Welcome to the Biology Bio-Information ToolKit! Use the options below to search."),
-                           
                            selectInput("dataset", "Select a trait: ", traitOptions),
-                          # selectInput("meshData", "Select a mesh trait category: ", meshOptions),
+                           
+                           # Removed:
+                           # selectInput("meshData", "Select a mesh trait category: ", meshOptions),
                            
                            helpText("Select your download format."),
                            radioButtons("type", "Format Type: ", choices = c("Excel (CSV)", "Text(TSV)", "Text(Space Separated)", "Doc")),
@@ -64,6 +124,8 @@ body <- dashboardBody(
               )
       ),
       
+      # Removed: 
+      # This was not needed anymore after clarifying with client specifications.
       # tabItem(tabName = "Removal",
       #         box(width = 3,
       #             helpText("Use the text box to write information that may need to be removed from the database."), 
@@ -78,21 +140,23 @@ body <- dashboardBody(
       
       tabItem(tabName = "Submission",
               box(title = "Use Your Own Data", width = 12, solidHeader = TRUE, status = "primary",
-                  
-                
                   "To compare your own trait dataset to the existing database, please upload a tab-delimited file.",
                   br(),
+                  
                   "Acceptable file types: .txt, .csv, .tab", 
                   br(),
+                  
                   "Max file size: 30MB",
                   br(),
+                  
                   "Your file must contain, at a minimum, the following eight headers for your submission to be successful. Please ensure all eight headers are labeled exactly as shown below:",
                   br(),
                   br(),
+                  
                   img(src = "uploadExampleFinal.PNG", height = 70, width = 600),
-
                   " ",
                   br(),
+                  
                   tags$hr(),
                   fileInput("file1", "Choose .TXT, .CSV, or .TAB File",
                             multiple = FALSE,
@@ -100,20 +164,22 @@ body <- dashboardBody(
                                        "text/comma-separated-values,text/plain",
                                        ".csv")),
                   
-                  # Horizontal line ----
+                  # Note: Horizontal line ----
                   tags$hr(),
-
                   helpText("Click the Submit button below to add your information."),
                   actionButton("submitButton", "Submit")
               )
               
-             # box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
-             #     textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
-             #)
+              # Removed: 
+              # box(title = "Request Entry", width = 5, status = "primary", solidHeader = TRUE,
+              #     textAreaInput("removalText", "", "Data Summary", width = "470px", height = "300px")
+              #)
       )
       
       
-      
+      # Removed:
+      # Administrator functionality was removed because they were not in original client specifications.
+      # However, this may be of use in further development if administrator functionality is desired.
       # ,
       # tabItem(tabName = "Admin",
       #         box(title = "ADMIN",
@@ -141,25 +207,27 @@ body <- dashboardBody(
   ) 
 )
 
-
+#------------------ Server --------------------#	
+# Several aspects here for our web application may or may not be used, depending on	
+# how we implement the uploading of another RESULTS file. Currently, when downloading	
+# from https://www.ncbi.nlm.nih.gov/projects/gapplus/sgap_plus.htm, only a .TAB file	
+# extension is attached with the file. Things like Excel sheets, CSV, etc. may be	
+# unnecessary to try and implement.
 ui <- dashboardPage(
   skin = "blue",
   header, sidebar, body,
   useShinyalert())
 
-
-
-#------------------server--------------------#
 server <- function(input, output, session){
-  
   options(shiny.maxRequestSize=30*1024^2)
   
-  #--fetch from trait option selected--#
+  # Note: Fetch from trait option selected
   datasetInput <- reactive({
     MergeData(input$dataset)
   })
   
-  #--fetch from mesh category option selected--#  
+  
+  # Note: Fetch from mesh category option selected
   meshInput <- reactive({
     switch(input$meshData,
            "Nutritional and Metabolic Diseases" = cellLine[cellLine$chrom == "chrX",],
@@ -167,13 +235,17 @@ server <- function(input, output, session){
            "type 3" = cellLine[cellLine$strand == "chrY",])
   })
   
-  #---show selected data in main panel---#
+  
+  # Note: Show selected data in main panel
   output$table <- renderTable({
     datasetInput()
-    #meshInput()
+    
+    # Removed: 
+    # meshInput()
   })
   
-  #---fetch from options for download---#
+  
+  # Note: Fetch from options for download
   fileext <- reactive({
     switch(input$type,
            "Excel (CSV)" = "csv", 
@@ -181,39 +253,36 @@ server <- function(input, output, session){
            "Text(Space Separated)" = "txt", 
            "Doc" = "doc"
     )
-    
   })
-  
+
+  # Note: This block of code handles error conditions that may be met during
+  # the uploading of different RESULTS.TAB-esque datasets. It uses standard
+  # try - catch error handling.
   observeEvent(input$submitButton, {
-    
     req(input$file1)
-    
-    
     tryCatch({
       traits <<- select(read.csv(input$file1$datapath,
-                   header = TRUE,
-                   sep = "\t"), 
-                   Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
+                                 header = TRUE,
+                                 sep = "\t"), 
+                        Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
       traitOptions <<- unique(c(as.character(traits$Trait)))
       meshOptions <<- unique(c(as.character(traits$MESH.CATEGORY)))
       shinyalert("File upload successful")
     },
-      error=function(cond) {
-        shinyalert("File upload failed; please check file format")
+    error=function(cond) {
+      shinyalert("File upload failed; please check file format")
     })
-    
-
   })
   
   
-  #--------------ADMIN Server-------------# 
-  
-  # input fields are treated as a group
+  #-------------- ADMIN Server -------------# 
+  # Note: Input fields are treated as a group
   formData <- reactive({
     sapply(names(GetTableMetadata()$fields), function(x) input[[x]])
   })
   
-  # Click "Submit" button -> save data
+  
+  # Note: Click "Submit" button -> save data
   observeEvent(input$submit, {
     if (input$id != "0") {
       UpdateData(formData())
@@ -223,63 +292,69 @@ server <- function(input, output, session){
     }
   }, priority = 1)
   
-  # Press "New" button -> display empty record
+  
+  # Note: Press "New" button -> display empty record
   observeEvent(input$new, {
     UpdateInputs(CreateDefaultRecord(), session)
   })
   
-  # Press "Delete" button -> delete from data
+  
+  # Note: Press "Delete" button -> delete from data
   observeEvent(input$delete, {
     DeleteData(formData())
     UpdateInputs(CreateDefaultRecord(), session)
   }, priority = 1)
   
-  # Select row in table -> show details in inputs
+  
+  # Note: Select row in table -> show details in inputs
   observeEvent(input$responses_rows_selected, {
     if (length(input$responses_rows_selected) > 0) {
       cellLine <- ReadData()[input$responses_rows_selected, ]
       UpdateInputs(cellLine, session)
     }
-    
   })
   
-  # display table
+  # Note: Display the table
   output$responses <- DT::renderDataTable({
-    #update after submit is clicked
+    
+    
+    # Note: Update after submit is clicked
     input$submit
-    #update after delete is clicked
+    
+    
+    # Note: Update after delete is clicked
     input$delete
+    
+    
     ReadData()
   }, server = FALSE, selection = "single",
   colnames = unname(GetTableMetadata()$fields)[-1]
-  )     
-  
-  
-  
+  )
 }
 
 
-
-
-##### HELPERS #####
-
+#-------------- Helper Methods -------------#
+# Note: CastData method
 CastData <- function(cellLine) {
   datar <- data.frame(chrom = cellLine["chrom"], 
                       chromStart = as.integer(cellLine["chromStart"]), 
                       chromEnd = as.integer(cellLine["chromEnd"]),
                       name = cellLine["name"],
                       blocks = cellLine["blocks"])
-  
   rownames(datar) <- cellLine["id"]
   return (datar)
 }
 
+
+# Note: CreateDefaultRecord method
 CreateDefaultRecord <- function() {
   mydefault <- CastData(list(id = "0", chrom = "", chromStart = 0, chromEnd = 0,
                              name = "", blocks = ""))
   return (mydefault)
 }
 
+
+# Note: UpdateInputs method
 UpdateInputs <- function(cellLine, session) {
   updateTextInput(session, "id", value = unname(rownames(cellLine)))
   updateTextInput(session, "chrom", value = unname(cellLine["chrom"]))
@@ -288,6 +363,8 @@ UpdateInputs <- function(cellLine, session) {
   updateTextInput(session, "blocks", value = as.integer(cellLine["blocks"]))
 }
 
+
+# Note: GetNextID method
 GetNextId <- function() {
   if (exists("responses") && nrow(responses) > 0) {
     max(as.integer(rownames(responses))) + 1
@@ -296,10 +373,11 @@ GetNextId <- function() {
   }
 }
 
-##### CRUD Methods #####
+#-------------- CRUD Methods -------------#
+#         "Create, Update, Delete"
 
+# Note: CreateData method
 CreateData <- function(cellLine) {
-  
   cellLine <- CastData(cellLine)
   rownames(cellLine) <- GetNextId()
   if (exists("responses")) {
@@ -309,21 +387,29 @@ CreateData <- function(cellLine) {
   }
 }
 
+
+# Note: ReadData method
 ReadData <- function() {
   if (exists("responses")) {
     responses
   }
 }
 
+
+# Note: UpdateData method
 UpdateData <- function(cellLine) {
   cellLine <- CastData(cellLine)
   responses[row.names(responses) == row.names(cellLine), ] <<- cellLine
 }
 
+
+# Note: DeleteData method
 DeleteData <- function(cellLine) {
   responses <<- responses[row.names(responses) != unname(cellLine["id"]), ]
 }
 
+
+# Note: GetTableMetadata method
 GetTableMetadata <- function() {
   fields <- c(id = "Id", 
               chrom = "Chromosome", 
@@ -331,11 +417,12 @@ GetTableMetadata <- function() {
               chromEnd = "chromEnd",
               name = "name",
               blocks = "blocks")
-  
   result <- list(fields = fields)
   return (result)
 }
 
+
+# Note: MergeData method
 MergeData <- function(mergeTrait) {
   resultFrame = data.frame(matrix(ncol = 13))
   names(resultFrame) <- c('chrom', 'start', 'stop', 'name', 'strand', 'Position',
@@ -347,7 +434,9 @@ MergeData <- function(mergeTrait) {
     tempdf2<-tempdf2[tempdf2$stop >= tempdf$Position[row],]
     tempdf2<-tempdf2[paste("chr", tempdf$Chr[row], sep="") == tempdf2$chrom,]
     if (nrow(tempdf2) > 0) {
-      #For some reason, if you remove "+1" it will start omitting (overwriting?) entries.
+      
+      
+      # Note: For some reason, if you remove "+1" it will start omitting (overwriting?) entries.
       resultFrame[nrow(resultFrame) + 1,] <- list(as.character(tempdf2$chrom[1]), tempdf2$start[1], tempdf2$stop[1],
                                                   as.character(tempdf2$name[1]), as.character(tempdf2$strand[1]), 
                                                   tempdf$Position[row], as.character(tempdf$Trait[row]),
@@ -356,17 +445,17 @@ MergeData <- function(mergeTrait) {
                                                   as.character(tempdf$Context[row]), as.character(tempdf$MESH.CATEGORY[row]))
     }
   }
-  #Remove the top row of "NA's" if there were hits. The "NA" values are created with the "+1+ above.
+  
+  
+  # Note: Remove the top row of "NA's" if there were hits. The "NA" values are created with the "+1+ above.
   if (nrow(resultFrame) > 1) {
     resultFrame <- resultFrame[-c(1),]
   }
   return (resultFrame)
 }
 
-#names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
-
-#traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
-
-
+# Removed: 
+# names(cellLine) <- c('chrom', 'start', 'stop', 'name', 'strand')
+# traits <- select(RESULTS, Trait, SNP, p.value, Chr, Position, Gene.Region, Context, MESH.CATEGORY)
 
 shinyApp(ui, server)
